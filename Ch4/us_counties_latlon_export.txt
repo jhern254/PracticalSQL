@@ -1,0 +1,85 @@
+
+_name|internal_point_lat|internal_point_lon
+Autauga County|32.5363818|-86.6444901
+Baldwin County|30.6592183|-87.7460666
+Barbour County|31.8706701|-85.4054562
+Bibb County|33.0158929|-87.1271475
+Blount County|33.9774479|-86.5672464
+Bullock County|32.1017589|-85.7172613
+Butler County|31.7516670|-86.6819689
+Calhoun County|33.7717061|-85.8225133
+Chambers County|32.9179433|-85.3918121
+Cherokee County|34.0695153|-85.6542417
+Chilton County|32.8540595|-86.7266275
+Choctaw County|31.9910082|-88.2488874
+Clarke County|31.6855211|-87.8186244
+Clay County|33.2678085|-85.8620510
+Cleburne County|33.6719810|-85.5161090
+Coffee County|31.4021833|-85.9892014
+Colbert County|34.7031120|-87.8014569
+Conecuh County|31.4282925|-86.9920291
+Coosa County|32.9314453|-86.2434818
+Covington County|31.2439873|-86.4487206
+Crenshaw County|31.7328256|-86.3192219
+Cullman County|34.1319229|-86.8692666
+Dale County|31.4306536|-85.6094760
+Dallas County|32.3335397|-87.1143556
+DeKalb County|34.4609290|-85.8039920
+Elmore County|32.5972286|-86.1427385
+Escambia County|31.1217475|-87.1684290
+Etowah County|34.0476377|-86.0344203
+Fayette County|33.7322485|-87.7520486
+Franklin County|34.4419884|-87.8428147
+Geneva County|31.0908664|-85.8243464
+Greene County|32.8444965|-87.9642005
+Hale County|32.7527958|-87.6230608
+Henry County|31.5169779|-85.2399712
+Houston County|31.1581928|-85.2963976
+Jackson County|34.7635224|-85.9774003
+Jefferson County|33.5534439|-86.8965359
+Lamar County|33.7870852|-88.0874309
+Lauderdale County|34.9041221|-87.6509966
+Lawrence County|34.5297759|-87.3218651
+Lee County|32.6040644|-85.3530477
+Limestone County|34.8102387|-86.9813995
+Lowndes County|32.1478880|-86.6505859
+Macon County|32.3870267|-85.6928870
+Madison County|34.7642377|-86.5510803
+Marengo County|32.2475911|-87.7910910
+Marion County|34.1382194|-87.8815510
+Marshall County|34.3095637|-86.3216681
+Mobile County|30.6845730|-88.1965684
+Monroe County|31.5803324|-87.3832656
+Montgomery County|32.2036505|-86.2038308
+Morgan County|34.4544844|-86.8464021
+Perry County|32.6390053|-87.2938269
+Pickens County|33.2968085|-88.0968780
+Pike County|31.7987263|-85.9419965
+Randolph County|33.2964753|-85.4640679
+Russell County|32.2898113|-85.1869798
+St. Clair County|33.7129627|-86.3156631
+Shelby County|33.2629366|-86.6781042
+Sumter County|32.5974811|-88.2000571
+Talladega County|33.3692774|-86.1758045
+Tallapoosa County|32.8633694|-85.7995532
+Tuscaloosa County|33.2902022|-87.5228598
+Walker County|33.7915714|-87.3010918
+Washington County|31.4069737|-88.2020776
+Wilcox County|31.9903296|-87.3022049
+Winston County|34.1558884|-87.3641471
+Aleutians East Borough|55.2437223|-161.9507485
+Aleutians West Census Area|51.9594469|178.3388130
+Anchorage Municipality|61.1775490|-149.2743541
+Bethel Census Area|60.9289164|-160.1533502
+Bristol Bay Borough|58.7313725|-156.9866122
+Denali Borough|63.6827316|-150.0267191
+Dillingham Census Area|59.8248160|-158.6022333
+Fairbanks North Star Borough|64.6908322|-146.5998673
+Desha County|33.8287478|-91.2444274
+Haines Borough|59.0999054|-135.5781024
+Hoonah-Angoon Census Area|58.0764336|-135.1850997
+Juneau City and Borough|58.3727004|-134.1787807
+Kenai Peninsula Borough|60.3663727|-152.3219731
+Ketchikan Gateway Borough|55.4499378|-131.1066847
+Kodiak Island Borough|57.5536114|-153.6309109
+

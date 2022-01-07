@@ -1,0 +1,30 @@
+-- Ch. 16 - Command Line psql
+
+-- Launch psql
+-- psql -d database_name -U user_name
+psql -d analysis -U jun
+
+-- single line query
+SELECT geo_name FROM us_counties_2010 LIMIT 3; 
+
+-- multi line query - can press enter in psql
+-- NOTE: query ends when ; is read
+SELECT geo_name
+FROM us_counties_2010
+LIMIT 3;
+
+-- Create wineries table to see psql work w/ ()
+CREATE TABLE wineries (
+    id bigint,
+    winery_name varchar(100)
+);
+
+
+
+
+
+
+
+
+
+

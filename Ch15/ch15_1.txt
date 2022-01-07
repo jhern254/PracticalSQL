@@ -1,0 +1,336 @@
+-- Ch. 15 - Views, Functions, and Triggers
+
+-- Creating and Querying Views
+
+-- Create View using kw CREATE OR REPLACE VIEW .. AS
+CREATE OR REPLACE VIEW nevada_counties_pop_2010 AS
+    SELECT geo_name,
+           state_fips,
+           county_fips,
+           p0010001 AS pop_2010
+    FROM us_counties_2010
+    WHERE state_us_abbreviation = 'NV'
+    ORDER BY county_fips;
+-- View that only shows 4/16 cols
+
+-- To drop view:
+DROP VIEW nveada_counties_pop_2010;
+
+-- Check view
+SELECT * 
+FROM nevada_counties_pop_2010
+LIMIT 5;
+
+
+-- Modification of Listing 6-13 as View, for easy reproducibility
+-- Calc change in pop.
+CREATE OR REPLACE VIEW county_pop_change_2010_2000 AS
+    SELECT c2010.geo_name,
+           c2010.state_us_abbreviation AS st,
+           c2010.state_fips,
+           c2010.county_fips,
+           c2010.p0010001 AS pop_2010,
+           c2000.p0010001 AS pop_2000,
+           round ( (CAST(c2010.p0010001 AS numeric(8, 1)) - c2000.p0010001)
+                / c2000.p0010001 * 100, 1 ) AS pct_change_2010_2000
+    FROM us_counties_2010 c2010 INNER JOIN us_counties_2000 c2000
+    ON c2010.state_fips = c2000.state_fips
+        AND c2010.county_fips = c2000.county_fips
+    ORDER BY c2010.state_fips, c2010.county_fips;
+
+-- Check Nevada counties from View
+SELECT geo_name,
+       st,
+       pop_2010,
+       pct_change_2010_2000
+FROM county_pop_change_2010_2000
+WHERE st = 'NV'
+LIMIT 5;
+-- Using views, we can answer questions, like why Clark county had a big 
+-- boom in pop., which was due to the housing bubble.
+
+
+
+
+-- Creating View of Employees relation from Ch. 6
+CREATE OR REPLACE VIEW employees_tax_dept AS
+    SELECT emp_id,
+           first_name,
+           last_name,
+           dept_id
+    FROM employees
+    WHERE dept_id = 1
+    ORDER BY emp_id
+    WITH LOCAL CHECK OPTION; -- Can only update table w/ this WHERE statement
+
+-- View table
+SELECT * FROM employees_tax_dept;
+
+
+
+-- Inserting into the View
+INSERT INTO employees_tax_dept (first_name, last_name, dept_id)
+VALUES ('Suzanne', 'Legere', 1);
+
+-- Fails since wrong dept. from View Table
+INSERT INTO employees_tax_dept (first_name, last_name, dept_id)
+VALUES ('Jamil', 'White', 2);
+-- OUT: Error: new row violates check option for view "employees_tax_dept"
+
+SELECT * FROM employees_tax_dept;
+SELECT * FROM employees;
+
+
+
+-- Update query on view table
+UPDATE employees_tax_dept
+SET last_name = 'Le Gere'
+WHERE emp_id = 5;
+
+SELECT * FROM employees_tax_dept;
+
+
+
+
+-- Deleting rows in View
+DELETE FROM employees_tax_dept
+WHERE emp_id = 5;
+
+
+
+
+-- Functions
+-- Write Percent change fn
+-- Percent change = (New number - old number) / old number
+
+CREATE OR REPLACE FUNCTION
+percent_change(new_value numeric,
+               old_value numeric,
+               decimal_places integer DEFAULT 1) -- 1 is def. arg value
+RETURNS numeric AS
+-- Main fn
+'SELECT round(
+        ((new_value - old_value) / old_value) * 100, decimal_places
+);'
+LANGUAGE SQL
+IMMUTABLE                   -- ensures no changes to DB
+RETURNS NULL ON NULL INPUT;
+
+
+-- Test out fn
+SELECT percent_change(110, 108, 2); --OUT: 1.85
+
+
+-- Rewrite query Listing 15-11
+SELECT c2010.geo_name,
+       c2010.state_us_abbreviation AS st,
+       c2010.p0010001 AS pop_2010,
+       percent_change(c2010.p0010001, c2000.p0010001) AS pct_chg_func,
+       round ( (CAST(c2010.p0010001 AS numeric(8, 1)) - c2000.p0010001)
+            / c2000.p0010001 * 100, 1 ) AS pct_chg_formula
+FROM us_counties_2010 c2010 INNER JOIN us_counties_2000 c2000
+ON c2010.state_fips = c2000.state_fips
+    AND c2010.county_fips = c2000.county_fips
+ORDER BY pct_chg_func DESC
+LIMIT 5;
+-- OUT: the function has same output as formula col.
+
+
+
+-- Updating Data w/ a function
+-- Add personal_days col to teachers table
+ALTER TABLE teachers ADD COLUMN personal_days integer;
+SELECT first_name,
+       last_name,
+       hire_date,
+       personal_days
+FROM teachers;
+
+
+-- Use PL/pgSQL lang. to create fn to fill personal_days col.
+
+CREATE OR REPLACE FUNCTION update_personal_days()
+RETURNS void AS $$
+BEGIN 
+    UPDATE teachers
+    SET personal_days = 
+        CASE WHEN (now() - hire_date) BETWEEN '5 years'::interval
+                                     AND '10 years'::interval THEN 4
+             WHEN (now() - hire_date) > '10 years'::interval THEN 5
+             ELSE 3
+        END;
+    RAISE NOTICE 'personal_days updated!';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Run fn
+SELECT update_personal_days();
+
+
+
+-- Using Python w/ Psql
+-- Enable PL/Python
+CREATE EXTENSION plpython3u;
+
+-- Create fn that trims 'County' from end of string
+CREATE OR REPLACE FUNCTION trim_county(input_string text)
+RETURNS text AS $$
+    import re
+    cleaned = re.sub(r'' County', '', input_string)
+    return cleaned
+$$ LANGUAGE plpython3u;
+-- Much more readable. Have to configure python
+
+-- Run fn
+SELECT geo_names,
+       trim_county(geo_names)
+FROM us_counties
+ORDER BY state_fips, county_fips
+LIMIT 5;
+-- OUT: Has new col. that has no county in county names
+
+
+
+-- Automating DB actions w/ Triggers
+-- Trigger: executes fn when INSERT, UPDATE, or DELETE occur on table/view
+-- 2 Ex.:
+-- 1) Keep log of changes made to grades at school
+-- 2) Automatically classifies temperatures each time we collect a reading
+
+-- 1) Logging grade updates to a Table - 3 things we need to do
+-- * Make grades_history table to record changes to grades in grades table
+-- * Trigger to run fn evevry time change occurs in Grades, name Grades_update
+-- * Fn for trigger: record_if_grade_changed()
+
+CREATE TABLE grades (
+    student_id bigint,
+    course_id bigint,
+    course varchar(30) NOT NULL,
+    grade varchar(5) NOT NULL,
+PRIMARY KEY (student_id, course_id) -- PK table syntax w/out CONSTRAINT naming
+-- Usually, syntax is CONSTRAINT cons_name PRIMARY KEY (prim._key)
+);
+
+INSERT INTO grades 
+VALUES 
+    (1, 1, 'Biology 2', 'F'),
+    (1, 2, 'English 11B', 'D'),
+    (1, 3, 'World History 11B', 'C'),
+    (1, 4, 'Trig 2', 'B');
+
+CREATE TABLE grades_history (
+    student_id bigint NOT NULL,
+    course_id bigint NOT NULL,
+    change_time timestamp with time zone NOT NULL,
+    course varchar(30) NOT NULL,
+    old_grade varchar(5) NOT NULL,
+    new_grade varchar(5) NOT NULL,
+PRIMARY KEY (student_id, course_id, change_time)
+);
+-- No data inserted because Trigger will handele inserts
+
+
+-- Create fn
+CREATE OR REPLACE FUNCTION record_if_grade_change()
+RETURNS trigger AS  -- When change occurs, execute trigger
+$$
+BEGIN 
+    IF NEW.grade <> OLD.grade THEN      -- inequality
+    INSERT INTO grades_history (
+        student_id,
+        course_id,
+        change_time,
+        course,
+        old_grade,
+        new_grade)
+    VALUES 
+        (OLD.student_id,
+         OLD.course_id,
+         now(),
+         OLD.course,
+         OLD.grade,
+         NEW.grade);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+-- Intuitve to build and track new and old vars
+
+
+-- Create trigger
+CREATE TRIGGER grades_update
+    AFTER UPDATE
+    ON grades
+    FOR EACH ROW
+    EXECUTE PROCEDURE record_if_grade_change();
+
+
+
+-- Testing the Trigger
+UPDATE grades
+SET grade = 'C'
+WHERE student_id = 1 AND course_id = 1;
+
+-- Check to see trigger changes
+SELECT * FROM grades_history;
+SELECT * FROM grades;
+-- OUT: grades_history now has 1 row
+
+
+
+
+-- Automatically Classifying Temperatures
+-- Similar steps as prev.
+
+CREATE TABLE temperature_test (
+    station_name varchar(50),
+    observation_date date,
+    max_temp integer,
+    min_temp integer,
+    max_temp_group varchar(40),
+PRIMARY KEY (station_name, observation_date)
+);
+
+
+-- Create fn to auto classify new row entries
+CREATE OR REPLACE FUNCTION classify_max_temp()
+    RETURNS trigger AS
+$$
+BEGIN
+    CASE
+        WHEN NEW.max_temp >= 90 THEN
+            NEW.max_temp_group := 'Hot';    -- := assignment oper. plpgsql
+        WHEN NEW.max_temp BETWEEN 70 AND 98 THEN
+            NEW.max_temp_group := 'Warm';
+        WHEN NEW.max_temp BETWEEN 50 AND 69 THEN
+            NEW.max_temp_group := 'Pleasant';
+        WHEN NEW.max_temp BETWEEN 33 AND 49 THEN
+            NEW.max_temp_group := 'Cold';
+        WHEN NEW.max_temp BETWEEN 20 AND 32 THEN 
+            NEW.max_temp_group := 'Freezing';
+        ELSE NEW.max_temp_group := 'Inhumane';
+    END CASE;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Create trigger to execute fn each time a row is addesd to temp_test
+CREATE TRIGGER temperature_insert
+    BEFORE INSERT
+    ON temperature_test
+    FOR EACH ROW
+    EXECUTE PROCEDURE classify_max_temp();
+
+
+-- Test trigger by inserting rows
+INSERT INTO temperature_test(station_name, observation_date, max_temp, min_temp)
+VALUES 
+    ('North Station', '1/19/2019', 10, -3),
+    ('North Station', '3/20/2019', 28, 19),
+    ('North Station', '5/2/2019', 65, 42),
+    ('North Station', '8/9/2019', 93, 74);
+
+SELECT * FROM temperature_test;     -- Check table
+-- OUT: Works, auto classifies max_temp into a group from trigger fn
+
